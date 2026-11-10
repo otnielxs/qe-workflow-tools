@@ -99,3 +99,18 @@ def test_analyze_writes_csv_and_plot(tmp_path):
     assert converged.grid == (8, 8, 8)
     assert png_path.exists() and png_path.stat().st_size > 0
     assert len(csv_path.read_text().strip().splitlines()) == 6  # header + 5 titik
+
+def test_cli_kconverge(capsys):
+    from dftwf.cli import main
+
+    code = main(["kconverge", str(KCONV), "--threshold", "0.1"])
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "12x12x12" in out
+    assert "Converged at k grid = 8x8x8" in out
+
+def test_cli_kconverge_empty_folder(tmp_path, capsys):
+    from dftwf.cli import main
+
+    assert main(["kconverge", str(tmp_path)]) == 1
+    assert "Error" in capsys.readouterr().err
