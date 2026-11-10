@@ -24,7 +24,8 @@ def build_parser():
     )
     conv.add_argument("--csv", help="Write the results table to this CSV file")
     conv.add_argument("--plot", help="Save the convergence plot to this image file")
-        kconv = sub.add_parser(
+
+    kconv = sub.add_parser(
         "kconverge",
         help="Analyse k-point convergence from a folder of pw.x outputs (+ .in files)",
     )
@@ -37,7 +38,6 @@ def build_parser():
     kconv.add_argument("--csv", help="Write the results table to this CSV file")
     kconv.add_argument("--plot", help="Save the convergence plot to this image file")
     return parser
-
 
 def main(argv=None):
     args = build_parser().parse_args(argv)
