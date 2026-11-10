@@ -15,6 +15,7 @@ Dependencies are kept minimal (`numpy`, `matplotlib`).
 - Combined band structure + DOS plot with `plot_band_dos`
 - Cutoff-energy convergence analysis (CSV table, plot, `dftwf converge` command)
 - Unit tests built on real QE outputs
+- k-point convergence analysis (CSV table, plot, `dftwf kconverge` command)
 
 ## Installation
 
@@ -96,6 +97,52 @@ A cutoff counts as converged when every energy step from that point onward is
 below the threshold (in meV/atom). Runs that did not finish or did not converge
 are flagged as invalid and excluded from the analysis. The silicon data in `examples/si/` is for demonstration only; its smearing settings are not recommended production parameters.
 
+## Convergence test (k-points)
+
+Run `pw.x` for several k-point grids with everything else fixed (including
+`ecutwfc` and, for metals, smearing and `degauss`). Put each output next to
+its input with the same base name (`scf_k4.in` / `scf_k4.out`), then:
+
+```bash
+dftwf kconverge examples/si/kconvergence --threshold 0.1 \
+    --csv kconvergence.csv --plot kconvergence.png
+```
+
+Output:
+
+```
+file                      k grid   nk(IBZ)            E (Ry)   dE (meV/atom)  status
+scf_k2.out                 2x2x2         3      -93.29217499               -  ok
+scf_k4.out                 4x4x4         8      -93.41165123        812.7785  ok
+scf_k6.out                 6x6x6        16      -93.41392143         15.4438  ok
+scf_k8.out                 8x8x8        29      -93.41393460          0.0896  ok
+scf_k12.out             12x12x12        72      -93.41393457          0.0002  ok
+
+Converged at k grid = 8x8x8 (threshold 0.1 meV/atom).
+```
+
+or from Python:
+
+```python
+from dftwf.convergence import analyze_kpoints
+
+points, converged = analyze_kpoints(
+    "examples/si/kconvergence",
+    threshold_mev=0.1,
+    csv_path="kconvergence.csv",
+    plot_path="kconvergence.png",
+)
+print("Converged at k grid =", converged.grid_label)
+```
+
+The k grid is read from the `K_POINTS automatic` block of the input file
+(pw.x outputs do not print it); the number of irreducible k-points is read
+from the output. Runs are ordered by total grid points (n1·n2·n3). The
+convergence criterion is the same as for the cutoff test. A warning is issued
+if `ecutwfc` differs between runs. The silicon data in `examples/si/kconvergence/`
+is for demonstration only: it uses `degauss = 0.2` Ry, which is far larger than
+appropriate for a semiconductor and makes the energy converge unrealistically fast.
+
 ## Units
 
 Total energies are returned in Rydberg (Ry) and Fermi energies in electronvolt (eV),
@@ -117,4 +164,4 @@ pytest -v
 ## Limitations
 
 - Parsers are tested on Quantum ESPRESSO `pw.x` output (non-spin-polarized Si examples); other QE versions or output formats may need adjustments.
-- Convergence analysis currently covers `ecutwfc` only (k-point convergence is on the roadmap).
+- Convergence analysis covers `ecutwfc` and k-point grids. Each k-point run needs its `.in` file next to the `.out`, and only `K_POINTS automatic` grids are supported (not explicit k-lists). All runs in a series should use the same shift, cutoff and smearing.
