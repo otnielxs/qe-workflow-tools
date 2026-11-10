@@ -1,6 +1,0 @@
-file,kgrid,nk_grid,nk_irreducible,ecutwfc_ry,n_atoms,total_energy_ry,delta_mev_per_atom,valid
-scf_k2.out,2x2x2,8,3,60.0,2,-93.29217499,,True
-scf_k4.out,4x4x4,64,8,60.0,2,-93.41165123,812.778528,True
-scf_k6.out,6x6x6,216,16,60.0,2,-93.41392143,15.443822,True
-scf_k8.out,8x8x8,512,29,60.0,2,-93.4139346,0.089593,True
-scf_k12.out,12x12x12,1728,72,60.0,2,-93.41393457,0.000204,True
