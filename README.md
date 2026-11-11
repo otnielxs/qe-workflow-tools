@@ -16,6 +16,7 @@ Dependencies are kept minimal (`numpy`, `matplotlib`).
 - Cutoff-energy convergence analysis (CSV table, plot, `dftwf converge` command)
 - Unit tests built on real QE outputs
 - k-point convergence analysis (CSV table, plot, `dftwf kconverge` command)
+- Band gap analysis (direct/indirect, from the pw.x output or `bands.dat.gnu`, `dftwf gap` command)
 
 ## Installation
 
@@ -143,6 +144,47 @@ if `ecutwfc` differs between runs. The silicon data in `examples/si/kconvergence
 is for demonstration only: it uses `degauss = 0.2` Ry, which is far larger than
 appropriate for a semiconductor and makes the energy converge unrealistically fast.
 
+## Band gap
+
+Two ways to get the gap from files you already have:
+
+```bash
+dftwf gap examples/si/nscf.out --bands examples/si/bands.dat.gnu
+```
+
+Output:
+
+```
+From pw.x output (k-points of that run):
+  VBM = 6.2096 eV, CBM = 6.7817 eV
+  Gap = 0.5721 eV
+
+From band structure (valid along this k-path only):
+  VBM = 6.1187 eV, CBM = 6.7317 eV
+  Gap = 0.6130 eV (indirect)
+  Smallest direct gap = 2.6016 eV
+  k(VBM) = 0.0000, k(CBM) = 0.8500 (path coordinate)
+```
+
+- **From the pw.x output**: the `highest occupied, lowest unoccupied level`
+  line that pw.x prints when the run includes empty bands. It only covers the
+  k-points of that run.
+- **From the band structure** (`bands.dat.gnu`): the number of occupied bands is
+  `nelec/2`, with `nelec` read from the pw.x output. The gap is
+  `min(CBM) - max(VBM)` along the k-path; it is called direct when it equals the
+  smallest direct gap along the path. It is only valid along the path used:
+  band extrema off the path are missed.
+
+or from Python:
+
+```python
+from dftwf.bandgap import gap_from_bands, get_number_of_electrons
+
+nelec = get_number_of_electrons("examples/si/nscf.out")
+g = gap_from_bands("examples/si/bands.dat.gnu", nelec)
+print(g.gap_ev, g.is_direct)
+```
+
 ## Units
 
 Total energies are returned in Rydberg (Ry) and Fermi energies in electronvolt (eV),
@@ -151,7 +193,7 @@ exactly as printed by QE.
 ## Project structure
 
 ````
-src/dftwf/      parsers.py, kpath.py, plotting.py, convergence.py, cli.py
+src/dftwf/      parsers.py, kpath.py, plotting.py, convergence.py, bandgap.py, cli.py
 tests/          unit tests and fixtures
 examples/si/    silicon example (QE inputs/outputs, script, notebook)
 ````
@@ -165,3 +207,4 @@ pytest -v
 
 - Parsers are tested on Quantum ESPRESSO `pw.x` output (non-spin-polarized Si examples); other QE versions or output formats may need adjustments.
 - Convergence analysis covers `ecutwfc` and k-point grids. Each k-point run needs its `.in` file next to the `.out`, and only `K_POINTS automatic` grids are supported (not explicit k-lists). All runs in a series should use the same shift, cutoff and smearing.
+- Band gap analysis assumes a non-spin-polarized system with an even number of electrons. A metal is reported as zero gap when the bands overlap. The gap from `bands.dat.gnu` is only valid along the k-path used.

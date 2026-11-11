@@ -3,7 +3,9 @@ from __future__ import annotations
 import argparse
 import sys
 
+from .bandgap import analyze_gap, format_gap
 from .convergence import analyze_ecut, analyze_kpoints
+
 
 def build_parser():
     parser = argparse.ArgumentParser(
@@ -37,7 +39,21 @@ def build_parser():
     )
     kconv.add_argument("--csv", help="Write the results table to this CSV file")
     kconv.add_argument("--plot", help="Save the convergence plot to this image file")
+
+    gap = sub.add_parser(
+        "gap",
+        help="Band gap from a pw.x output and/or a bands.dat.gnu file",
+    )
+    gap.add_argument(
+        "output",
+        help="pw.x scf/nscf/bands output (number of electrons, HOMO/LUMO line)",
+    )
+    gap.add_argument(
+        "--bands",
+        help="bands.dat.gnu file for the gap along the k-path",
+    )
     return parser
+
 
 def main(argv=None):
     args = build_parser().parse_args(argv)
@@ -68,6 +84,7 @@ def main(argv=None):
         else:
             print(f"\nConverged at ecutwfc = {converged:g} Ry "
                   f"(threshold {args.threshold:g} meV/atom).")
+
     if args.command == "kconverge":
         try:
             points, converged = analyze_kpoints(
@@ -94,6 +111,20 @@ def main(argv=None):
         else:
             print(f"\nConverged at k grid = {converged.grid_label} "
                   f"(threshold {args.threshold:g} meV/atom).")
+
+    if args.command == "gap":
+        try:
+            from_output, from_bands = analyze_gap(args.output, args.bands)
+        except (FileNotFoundError, ValueError) as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 1
+
+        if from_output is not None:
+            print(format_gap("From pw.x output (k-points of that run):", from_output))
+        if from_bands is not None:
+            if from_output is not None:
+                print()
+            print(format_gap("From band structure (valid along this k-path only):", from_bands))
     return 0
 
 
