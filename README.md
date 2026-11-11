@@ -175,6 +175,8 @@ From band structure (valid along this k-path only):
   smallest direct gap along the path. It is only valid along the path used:
   band extrema off the path are missed.
 
+In the silicon example the two results come from different runs (nscf: fixed occupations, `nbnd = 20`, 24x24x24 grid; bands: smearing run), so their absolute VBM/CBM values are not directly comparable.
+
 or from Python:
 
 ```python
