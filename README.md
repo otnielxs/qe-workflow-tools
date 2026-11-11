@@ -3,7 +3,7 @@
 [![tests](https://github.com/otnielxs/qe-workflow-tools/actions/workflows/tests.yml/badge.svg)](https://github.com/otnielxs/qe-workflow-tools/actions/workflows/tests.yml)
 
 Python tools for Quantum ESPRESSO (QE) workflows: parse `pw.x`
-outputs, read band structure and DOS data, make publication-ready plots, and convergency analysis.
+outputs, read band structure and DOS data, plots, convergency analysis, and band gap analysis.
 Dependencies are kept minimal (`numpy`, `matplotlib`).
 
 
